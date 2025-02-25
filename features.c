@@ -164,7 +164,7 @@ static const struct dmi_system_id qc71_dmi_table[] __initconst = {
 		}
 	},
 	{
-		/* Slimbook EVO A8 */
+		/* Slimbook EVO 14 A8 */
 		.callback = slimbook_evo_dmi_cb,
 		.matches = {
 			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "EVO14-A8"),
@@ -172,7 +172,16 @@ static const struct dmi_system_id qc71_dmi_table[] __initconst = {
 			{ }
 		}
 	},
-		{
+	{
+		/* Slimbook EVO 15 A8 */
+		.callback = slimbook_evo_dmi_cb,
+		.matches = {
+			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "EVO15-A8"),
+			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "SLIMBOOK"),
+			{ }
+		}
+	},
+	{
 		/* Slimbook Creative */
 		.callback = slimbook_creative_dmi_cb,
 		.matches = {
