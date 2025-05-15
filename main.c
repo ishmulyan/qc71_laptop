@@ -57,6 +57,49 @@ static struct qc71_submodule {
 };
 
 #undef SUBMODULE_ENTRY
+static int qc71_laptop_module_suspend(struct device *dev)
+{
+
+	pr_info("Suspension...\n");
+
+	int data = ec_read_byte(0x727);
+	data &= ~(1 << 6);
+	ec_write_byte(0x727,data);
+
+
+	return 0;
+
+}
+
+static int qc71_laptop_module_resume(struct device *dev)
+{
+
+	pr_info("Resuming...\n");
+
+	int data = ec_read_byte(0x727);
+	data |= (1 << 6);
+	ec_write_byte(0x727,data);
+
+	return 0;
+
+}
+
+static const struct dev_pm_ops qc71_laptop_module_pm_ops = {
+
+	.suspend = qc71_laptop_module_suspend,
+	.resume = qc71_laptop_module_resume
+
+};
+
+static struct platform_driver qc71_laptop_module_driver = {
+
+	.driver =
+	{
+		.name = "qc71_laptop",
+		.pm = &qc71_laptop_module_pm_ops
+	}
+
+};
 
 static void do_cleanup(void)
 {
@@ -77,6 +120,14 @@ static int __init qc71_laptop_module_init(void)
 	if (!wmi_has_guid(QC71_WMI_WMBC_GUID)) {
 		pr_err("WMI GUID not found\n");
 		err = -ENODEV; goto out;
+	}
+
+	err = platform_driver_register(&qc71_laptop_module_driver);
+
+	if (err) {
+		pr_err("Unable to register driver\n");
+
+		return err;
 	}
 
 	err = ec_read_byte(PROJ_ID_ADDR);
@@ -187,8 +238,10 @@ out:
 static void __exit qc71_laptop_module_cleanup(void)
 {
 	do_cleanup();
+	platform_driver_unregister(&qc71_laptop_module_driver);
 	pr_info("module unloaded\n");
 }
+
 
 /* ========================================================================== */
 
