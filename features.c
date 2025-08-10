@@ -182,6 +182,24 @@ static const struct dmi_system_id qc71_dmi_table[] __initconst = {
 		}
 	},
 	{
+		/* Slimbook EVO 14 AI9 STP */
+		.callback = slimbook_evo_dmi_cb,
+		.matches = {
+			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "EVO14-AI9-STP"),
+			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "SLIMBOOK"),
+			{ }
+		}
+	},
+	{
+		/* Slimbook EVO 15 AI9 STP */
+		.callback = slimbook_evo_dmi_cb,
+		.matches = {
+			DMI_EXACT_MATCH(DMI_PRODUCT_NAME, "EVO15-AI9-STP"),
+			DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "SLIMBOOK"),
+			{ }
+		}
+	},
+	{
 		/* Slimbook Creative */
 		.callback = slimbook_creative_dmi_cb,
 		.matches = {
