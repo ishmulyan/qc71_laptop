@@ -148,31 +148,6 @@ static int __init qc71_laptop_module_init(void)
 		
 	}
 
-	if (qc71_model == SLB_MODEL_EVO ||
-			qc71_model == SLB_MODEL_CREATIVE) {
-
-		int status = ec_read_byte(CTRL_1_ADDR);
-		if (status < 0)
-			return status;
-
-		status = SET_BIT(status, CTRL_1_MANUAL_MODE, 1);
-		status = ec_write_byte(CTRL_1_ADDR, status);
-		if (status < 0)
-			return status;
-
-		pr_info("EC set in manual mode\n");
-
-		status = ec_read_byte(FAN_CTRL_ADDR);
-		if (status < 0)
-			return status;
-
-		status = SET_BIT(status, FAN_CTRL_AUTO, 1);
-		status = ec_write_byte(FAN_CTRL_ADDR, status);
-		if (status < 0)
-			return status;
-
-	}
-
 	err = 0;
 
 out:

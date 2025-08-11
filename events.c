@@ -130,47 +130,6 @@ static inline void emit_keyboard_led_hw_changed(void)
 { }
 #endif
 
-static void change_performance(void)
-{
-	int status, performance_bits, current_value, next_value;
-	char profile[32];
-
-	status = ec_read_byte(FAN_CTRL_ADDR);
-
-	if (status<0)
-		return;
-
-	pr_debug("current profile:%x\n",status);
-
-	performance_bits = FAN_CTRL_SILENT_MODE | FAN_CTRL_TURBO;
-	current_value = status & performance_bits;
-	next_value = status & ~performance_bits;
-
-	switch (current_value) {
-		case 0:
-			next_value = next_value | FAN_CTRL_AUTO | FAN_CTRL_TURBO;
-			sprintf(profile,"perfomance");
-			break;
-
-		case FAN_CTRL_SILENT_MODE:
-			next_value = next_value | FAN_CTRL_AUTO;
-			sprintf(profile,"balanced");
-			break;
-
-		case FAN_CTRL_TURBO:
-			next_value = next_value | FAN_CTRL_AUTO | FAN_CTRL_SILENT_MODE;
-			sprintf(profile,"energy-saver");
-			break;
-
-		default:
-			next_value = next_value | FAN_CTRL_AUTO;
-			sprintf(profile,"balanced");
-	}
-
-	pr_info("Setting profile to: %s\n",profile);
-	ec_write_byte(FAN_CTRL_ADDR, next_value);
-}
-
 static void process_event_72(const union acpi_object *obj)
 {
 	bool do_report = true;
@@ -313,14 +272,8 @@ static void process_event_72(const union acpi_object *obj)
 
 	/* perf mode button pressed */
 	case 0xb0:
-		do_report = false;
 		pr_info("change perf mode\n");
 
-		if (qc71_model == SLB_MODEL_EVO ||
-			qc71_model == SLB_MODEL_CREATIVE) {
-			do_report = true;
-			change_performance();
-		}
 		break;
 
 	/* increase keyboard backlight */
@@ -348,18 +301,8 @@ static void process_event_72(const union acpi_object *obj)
 
 	/* perf mode button pressed */
 	case 0xbc:
-		do_report = false;
-		pr_info("change perfomance mode\n");
-		
-		if (qc71_model == SLB_MODEL_EXECUTIVE) {
-			do_report = true;
-		}
+		pr_info("change perf mode\n");
 
-		sysfs_notify(&qc71_platform_dev->dev.kobj, NULL, "silent_mode");
-
-		if (qc71_model == SLB_MODEL_HERO || qc71_model == SLB_MODEL_TITAN) {
-			sysfs_notify(&qc71_platform_dev->dev.kobj, NULL, "turbo_mode");
-		}
 		break;
 
 	/* webcam toggle on/off */
