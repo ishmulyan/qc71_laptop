@@ -284,6 +284,61 @@ static ssize_t turbo_mode_store(struct device *dev, struct device_attribute *att
 	return count;
 }
 
+static ssize_t performance_mode_show(struct device *dev,
+							   struct device_attribute *attr, char *buf)
+{
+	int status = ec_read_byte(FAN_CTRL_ADDR);
+
+	if (status < 0)
+		return status;
+
+	status = status & (FAN_CTRL_TURBO | FAN_CTRL_SILENT_MODE);
+	int mode = 0;
+
+	switch (status) {
+		case 0:
+			mode = 1;
+		break;
+
+		case FAN_CTRL_SILENT_MODE:
+			mode = 0;
+		break;
+
+		case FAN_CTRL_TURBO:
+			mode = 2;
+		break;
+
+		default:
+			mode = -1;
+	}
+
+	return sprintf(buf, "%d\n", mode);
+}
+
+static ssize_t performance_mode_store(struct device *dev, struct device_attribute *attr,
+								const char *buf, size_t count)
+{
+	int status;
+	uint32_t value = 0;
+
+	if (kstrtouint(buf,0, &value))
+		return -EINVAL;
+
+	status = ec_read_byte(FAN_CTRL_ADDR);
+	if (status < 0)
+		return status;
+
+	status = SET_BIT(status, FAN_CTRL_TURBO, value == 2);
+	status = SET_BIT(status, FAN_CTRL_SILENT_MODE, value == 0);
+
+	status = ec_write_byte(FAN_CTRL_ADDR, status);
+
+	if (status < 0)
+		return status;
+
+	return count;
+}
+
 static ssize_t kbd_backlight_rgb_max_show(struct device *dev,
 				   struct device_attribute *attr, char *buf)
 {
@@ -397,6 +452,7 @@ static DEVICE_ATTR_RW(manual_control);
 static DEVICE_ATTR_RW(super_key_lock);
 static DEVICE_ATTR_RW(silent_mode);
 static DEVICE_ATTR_RW(turbo_mode);
+static DEVICE_ATTR_RW(performance_mode);
 static DEVICE_ATTR_RO(kbd_backlight_rgb_max);
 static DEVICE_ATTR_RW(kbd_backlight_rgb_red);
 static DEVICE_ATTR_RW(kbd_backlight_rgb_green);
@@ -412,6 +468,7 @@ static struct attribute *qc71_laptop_attrs[] = {
 	&dev_attr_super_key_lock.attr,
 	&dev_attr_silent_mode.attr,
 	&dev_attr_turbo_mode.attr,
+	&dev_attr_performance_mode.attr,
 	&dev_attr_kbd_backlight_rgb_max.attr,
 	&dev_attr_kbd_backlight_rgb_red.attr,
 	&dev_attr_kbd_backlight_rgb_green.attr,
