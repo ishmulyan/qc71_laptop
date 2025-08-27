@@ -90,7 +90,7 @@ static void toggle_fn_lock_from_event_handler(void)
 extern struct rw_semaphore leds_list_lock;
 extern struct list_head leds_list;
 
-static void emit_keyboard_led_hw_changed(void)
+static void emit_keyboard_led_hw_changed(int brightness)
 {
 	struct led_classdev *led;
 
@@ -110,13 +110,16 @@ static void emit_keyboard_led_hw_changed(void)
 			continue;
 
 		suffix = led->name + name_length - strlen(KBD_BL_LED_SUFFIX);
-
+		pr_info("candidate %s\n",led->name);
 		if (strcmp(suffix, KBD_BL_LED_SUFFIX) == 0) {
 			if (mutex_lock_interruptible(&led->led_access))
 				break;
 
-			if (led_update_brightness(led) >= 0)
+			if (led_update_brightness(led) >= 0) {
+				led->brightness = brightness;
 				led_classdev_notify_brightness_hw_changed(led, led->brightness);
+				pr_info("notified\n");
+			}
 
 			mutex_unlock(&led->led_access);
 			break;
@@ -126,7 +129,7 @@ static void emit_keyboard_led_hw_changed(void)
 	up_read(&leds_list_lock);
 }
 #else
-static inline void emit_keyboard_led_hw_changed(void)
+static inline void emit_keyboard_led_hw_changed(int brightness)
 { }
 #endif
 
@@ -136,7 +139,6 @@ static void process_event_72(const union acpi_object *obj)
 
 	if (obj->type != ACPI_TYPE_INTEGER)
 		return;
-
 	switch (obj->integer.value) {
 	/* caps lock */
 	case 0x01:
@@ -216,17 +218,32 @@ static void process_event_72(const union acpi_object *obj)
 
 	case 0x3b:
 		do_report = false;
-		pr_debug("backlight off\n");
+		pr_debug("backlight 00\n");
+		emit_keyboard_led_hw_changed(0);
+		break;
+
+	case 0x3c:
+		do_report = false;
+		pr_debug("backlight 25\n");
+		emit_keyboard_led_hw_changed(1);
 		break;
 
 	case 0x3d:
 		do_report = false;
-		pr_debug("backlight half\n");
+		pr_debug("backlight 50\n");
+		emit_keyboard_led_hw_changed(2);
+		break;
+
+	case 0x3e:
+		do_report = false;
+		pr_debug("backlight 75\n");
+		emit_keyboard_led_hw_changed(3);
 		break;
 
 	case 0x3f:
 		do_report = false;
-		pr_debug("backlight full\n");
+		pr_debug("backlight 100\n");
+		emit_keyboard_led_hw_changed(4);
 		break;
 
 	/* enable super key (win key) lock */
@@ -314,7 +331,7 @@ static void process_event_72(const union acpi_object *obj)
 	case 0xf0:
 		do_report = false;
 		pr_debug("keyboard backlight changed\n");
-		emit_keyboard_led_hw_changed();
+		emit_keyboard_led_hw_changed(0xff);
 		break;
 
 	default:

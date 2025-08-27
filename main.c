@@ -33,6 +33,7 @@
 #include "hwmon.h"
 #include "battery.h"
 #include "led_lightbar.h"
+#include "led_keyboard.h"
 #include "debugfs.h"
 
 /* ========================================================================== */
@@ -53,6 +54,7 @@ static struct qc71_submodule {
 	SUBMODULE_ENTRY(hwmon, false),
 	SUBMODULE_ENTRY(battery, false),
 	SUBMODULE_ENTRY(led_lightbar, false),
+	SUBMODULE_ENTRY(led_keyboard, false),
 	SUBMODULE_ENTRY(debugfs, false),
 };
 
@@ -142,10 +144,12 @@ static int __init qc71_laptop_module_init(void)
 		if (status < 0)
 			goto out;
 		
-		status = ec_write_byte(CTRL_2_ADDR, (status & 0x0f) | CTRL_2_COLOR_KBD_TRIGGER);
+		status = ec_write_byte(CTRL_2_ADDR, (status & 0x0f) | (4<<5) | CTRL_2_COLOR_KBD_TRIGGER);
 		if (status < 0)
 			goto out;
 		
+
+
 	}
 
 	err = 0;

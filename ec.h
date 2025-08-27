@@ -232,6 +232,10 @@
 #define KBD_BACKLIGHT_RGB_GREEN_ADDR ADDR(0x18, 0x05)
 #define KBD_BACKLIGHT_RGB_BLUE_ADDR  ADDR(0x18, 0x08)
 
+#define KBD_BACKLIGHT_RGB_RED_SETUP_ADDR   ADDR(0x7, 0x69)
+#define KBD_BACKLIGHT_RGB_GREEN_SETUP_ADDR ADDR(0x7, 0x6a)
+#define KBD_BACKLIGHT_RGB_BLUE_SETUP_ADDR  ADDR(0x7, 0x6b)
+
 /* ========================================================================== */
 
 
