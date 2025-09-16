@@ -339,109 +339,70 @@ static ssize_t performance_mode_store(struct device *dev, struct device_attribut
 	return count;
 }
 
-static ssize_t kbd_backlight_rgb_max_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
+static ssize_t custom_tdp_show(struct device *dev,
+							   struct device_attribute *attr, char *buf)
 {
-	int status = ec_read_byte(KBD_BACKLIGHT_RGB_MAX_ADDR);
-
-	if (status < 0)
-		return status;
-
-	return sprintf(buf, "%x\n", status);
-}
-
-static ssize_t kbd_backlight_rgb_red_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
-{
-	int status = ec_read_byte(KBD_BACKLIGHT_RGB_RED_ADDR);
-
-	if (status < 0)
-		return status;
-
-	return sprintf(buf, "%x\n", status);
-}
-
-static ssize_t kbd_backlight_rgb_red_store(struct device *dev, struct device_attribute *attr,
-				    const char *buf, size_t count)
-{
-	int status;
-	int value;
-	uint8_t byte;
-
-	if (kstrtouint(buf, 0, &value))
-		return -EINVAL;
+	int pl1,pl2,pl4;
+	int status = ec_read_byte(PL1_ADDR);
 	
-	byte = (uint8_t) value;
-
-	status = ec_write_byte(KBD_BACKLIGHT_RGB_RED_ADDR, byte);
-
 	if (status < 0)
 		return status;
+	
+	pl1 = status;
+	
+	status = ec_read_byte(PL2_ADDR);
+	
+	if (status < 0)
+		return status;
+	
+	pl2 = status;
+	
+	status = ec_read_byte(PL4_ADDR);
+	
+	if (status < 0)
+		return status;
+	
+	pl4 = status;
+	
+	return sprintf(buf, "%d %d %d\n", pl1, pl2, pl4);
+}
 
+static ssize_t custom_tdp_store(struct device *dev, struct device_attribute *attr,
+								const char *buf, size_t count)
+{
+	char* found;
+	int pl[3];
+	int num = 0;
+	int value;
+	int status;
+	
+	while( (found = strsep((char**)&buf," ")) != NULL && num < 3) {
+		if (kstrtouint(found,0, &value))
+			return -EINVAL;
+		pl[num] = value;
+		num++;
+	}
+	
+	if (num == 3) {
+		status = ec_write_byte(PL1_ADDR, pl[0]);
+
+		if (status < 0)
+			return status;
+		
+		status = ec_write_byte(PL2_ADDR, pl[1]);
+
+		if (status < 0)
+			return status;
+		
+		status = ec_write_byte(PL4_ADDR, pl[2]);
+
+		if (status < 0)
+			return status;
+	}
+	
 	return count;
 }
 
-static ssize_t kbd_backlight_rgb_green_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
-{
-	int status = ec_read_byte(KBD_BACKLIGHT_RGB_GREEN_ADDR);
-
-	if (status < 0)
-		return status;
-
-	return sprintf(buf, "%x\n", status);
-}
-
-static ssize_t kbd_backlight_rgb_green_store(struct device *dev, struct device_attribute *attr,
-				    const char *buf, size_t count)
-{
-	int status;
-	int value;
-	uint8_t byte;
-
-	if (kstrtouint(buf, 0, &value))
-		return -EINVAL;
-	
-	byte = (uint8_t) value;
-
-	status = ec_write_byte(KBD_BACKLIGHT_RGB_GREEN_ADDR, byte);
-
-	if (status < 0)
-		return status;
-
-	return count;
-}
-
-static ssize_t kbd_backlight_rgb_blue_show(struct device *dev,
-				   struct device_attribute *attr, char *buf)
-{
-	int status = ec_read_byte(KBD_BACKLIGHT_RGB_BLUE_ADDR);
-
-	if (status < 0)
-		return status;
-
-	return sprintf(buf, "%x\n", status);
-}
-
-static ssize_t kbd_backlight_rgb_blue_store(struct device *dev, struct device_attribute *attr,
-				    const char *buf, size_t count)
-{
-	int status;
-	int value;
-	uint8_t byte;
-
-	if (kstrtouint(buf, 0, &value))
-		return -EINVAL;
-	
-	byte = (uint8_t) value;
-
-	status = ec_write_byte(KBD_BACKLIGHT_RGB_BLUE_ADDR, byte);
-
-	if (status < 0)
-		return status;
-
-	return count;
-}
 /* ========================================================================== */
 
 static DEVICE_ATTR_RW(fn_lock);
@@ -453,11 +414,7 @@ static DEVICE_ATTR_RW(super_key_lock);
 static DEVICE_ATTR_RW(silent_mode);
 static DEVICE_ATTR_RW(turbo_mode);
 static DEVICE_ATTR_RW(performance_mode);
-static DEVICE_ATTR_RO(kbd_backlight_rgb_max);
-static DEVICE_ATTR_RW(kbd_backlight_rgb_red);
-static DEVICE_ATTR_RW(kbd_backlight_rgb_green);
-static DEVICE_ATTR_RW(kbd_backlight_rgb_blue);
-
+static DEVICE_ATTR_RW(custom_tdp);
 
 static struct attribute *qc71_laptop_attrs[] = {
 	&dev_attr_fn_lock.attr,
@@ -469,10 +426,7 @@ static struct attribute *qc71_laptop_attrs[] = {
 	&dev_attr_silent_mode.attr,
 	&dev_attr_turbo_mode.attr,
 	&dev_attr_performance_mode.attr,
-	&dev_attr_kbd_backlight_rgb_max.attr,
-	&dev_attr_kbd_backlight_rgb_red.attr,
-	&dev_attr_kbd_backlight_rgb_green.attr,
-	&dev_attr_kbd_backlight_rgb_blue.attr,
+	&dev_attr_custom_tdp.attr,
 	NULL
 };
 
@@ -494,15 +448,11 @@ static umode_t qc71_laptop_attr_is_visible(struct kobject *kobj, struct attribut
 		ok = qc71_features.silent_mode;
 	else if (attr == &dev_attr_turbo_mode.attr)
 		ok = qc71_features.turbo_mode;
-	else if (attr == &dev_attr_kbd_backlight_rgb_max.attr)
-		ok = qc71_features.kbd_backlight_rgb;
-	else if (attr == &dev_attr_kbd_backlight_rgb_red.attr)
-		ok = qc71_features.kbd_backlight_rgb;
-	else if (attr == &dev_attr_kbd_backlight_rgb_green.attr)
-		ok = qc71_features.kbd_backlight_rgb;
-	else if (attr == &dev_attr_kbd_backlight_rgb_blue.attr)
-		ok = qc71_features.kbd_backlight_rgb;
-
+	else if (attr == &dev_attr_performance_mode.attr)
+		ok = qc71_features.turbo_mode || qc71_features.silent_mode;
+	else if (attr == &dev_attr_custom_tdp.attr)
+		ok = qc71_features.turbo_mode || qc71_features.silent_mode;
+	
 	return ok ? attr->mode : 0;
 }
 
