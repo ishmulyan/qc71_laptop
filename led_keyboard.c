@@ -30,12 +30,6 @@ static int qc71_keyboard_led_set_brightness(struct led_classdev *led_cdev,
     int green = mcled_cdev->subled_info[1].intensity ;
     int blue =  mcled_cdev->subled_info[2].intensity ;
 
-    //pr_info("led %d,%d\n",red,fixp_linear_interpolate(0, 0,U8_MAX,0xC8, red));
-
-    //ec_write_byte(KBD_BACKLIGHT_RGB_RED_ADDR,fixp_linear_interpolate(0, 0, U8_MAX, 0xC8,red) );
-    //ec_write_byte(KBD_BACKLIGHT_RGB_GREEN_ADDR,fixp_linear_interpolate(0, 0, U8_MAX,0xC8, green));
-    //ec_write_byte(KBD_BACKLIGHT_RGB_BLUE_ADDR, fixp_linear_interpolate(0, 0, U8_MAX,0xC8, blue));
-
     ec_write_byte(KBD_BACKLIGHT_RGB_RED_SETUP_ADDR,fixp_linear_interpolate(0, 0, U8_MAX, 0x32, red) );
     ec_write_byte(KBD_BACKLIGHT_RGB_GREEN_SETUP_ADDR,fixp_linear_interpolate(0, 0, U8_MAX, 0x32, green) );
     ec_write_byte(KBD_BACKLIGHT_RGB_BLUE_SETUP_ADDR,fixp_linear_interpolate(0, 0, U8_MAX, 0x32, blue) );
@@ -49,8 +43,6 @@ static int qc71_keyboard_led_set_brightness(struct led_classdev *led_cdev,
     ec_write_byte(CTRL_2_ADDR, data);
 
     led_cdev->brightness = value;
-
-    pr_info("led %d %d %d %d\n",red,green,blue,value);
 
     return 0;
 }
@@ -95,7 +87,6 @@ int __init qc71_led_keyboard_setup(void)
     if (!qc71_features.kbd_backlight_rgb)
         return -ENODEV;
 
-    //err = led_classdev_register(&qc71_platform_dev->dev, &qc71_keyboard_led);
     err = devm_led_classdev_multicolor_register_ext(&qc71_platform_dev->dev, &qc71_keyboard_led, NULL);
 
     if (!err)
@@ -107,7 +98,6 @@ int __init qc71_led_keyboard_setup(void)
 void qc71_led_keyboard_cleanup(void)
 {
     if (keyboard_led_registered) {
-        //led_classdev_unregister(&qc71_keyboard_led);
         devm_led_classdev_multicolor_unregister(&qc71_platform_dev->dev, &qc71_keyboard_led);
     }
 }
