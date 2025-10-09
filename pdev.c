@@ -297,15 +297,15 @@ static ssize_t performance_mode_show(struct device *dev,
 
 	switch (status) {
 		case 0:
-			mode = 1;
+			mode = 2;
 		break;
 
 		case FAN_CTRL_SILENT_MODE:
-			mode = 0;
+			mode = 1;
 		break;
 
 		case FAN_CTRL_TURBO:
-			mode = 2;
+			mode = 3;
 		break;
 
 		default:
@@ -328,8 +328,8 @@ static ssize_t performance_mode_store(struct device *dev, struct device_attribut
 	if (status < 0)
 		return status;
 
-	status = SET_BIT(status, FAN_CTRL_TURBO, value == 2);
-	status = SET_BIT(status, FAN_CTRL_SILENT_MODE, value == 0);
+	status = SET_BIT(status, FAN_CTRL_TURBO, value == 3);
+	status = SET_BIT(status, FAN_CTRL_SILENT_MODE, value == 1);
 
 	status = ec_write_byte(FAN_CTRL_ADDR, status);
 
