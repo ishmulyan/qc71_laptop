@@ -52,6 +52,14 @@ static const struct dmi_system_id qc71_dmi_table[] __initconst = {
 			{ }
 		}
 	},
+	{
+		/* PCSpecialist */
+		.callback = slimbook_dmi_cb,
+		.matches = {
+				DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "AiStone"), 
+			{ }
+		}
+	},
 	{ }
 };
 
