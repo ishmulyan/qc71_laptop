@@ -398,6 +398,25 @@ static ssize_t custom_tdp_store(struct device *dev, struct device_attribute *att
 
 		if (status < 0)
 			return status;
+		
+		if (pl[0] == 0 && pl[1] == 0 && pl[2] == 0) {
+			status = ec_read_byte(0x727);
+			
+			if (status < 0)
+				return status;
+			
+			status &= ~(1 << 6);
+			ec_write_byte(0x727, status);
+		}
+		else {
+			status = ec_read_byte(0x727);
+			
+			if (status < 0)
+				return status;
+			
+			status |= (1 << 6);
+			ec_write_byte(0x727, status);
+		}
 	}
 	
 	return count;
