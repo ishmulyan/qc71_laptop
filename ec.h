@@ -89,6 +89,8 @@
 
 #define CTRL_6_ADDR ADDR(0x07, 0x8E)
 
+#define CTRL_7_ADDR ADDR(0x07, 0x27)
+#define CTRL_7_CUSTOM_MODE    BIT(6)
 /* ========================================================================== */
 
 #define DEVICE_STATUS_ADDR  ADDR(0x04, 0x7B)
