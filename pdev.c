@@ -400,26 +400,37 @@ static ssize_t custom_tdp_store(struct device *dev, struct device_attribute *att
 			return status;
 		
 		if (pl[0] == 0 && pl[1] == 0 && pl[2] == 0) {
-			status = ec_read_byte(0x727);
+			status = ec_read_byte(CTRL_7_ADDR);
 			
 			if (status < 0)
 				return status;
 			
-			status &= ~(1 << 6);
-			ec_write_byte(0x727, status);
+			status = SET_BIT(status, CTRL_7_CUSTOM_MODE, 0);
+			ec_write_byte(CTRL_7_ADDR, status);
 		}
 		else {
-			status = ec_read_byte(0x727);
+			status = ec_read_byte(CTRL_7_ADDR);
 			
 			if (status < 0)
 				return status;
 			
-			status |= (1 << 6);
-			ec_write_byte(0x727, status);
+			status = SET_BIT(status, CTRL_7_CUSTOM_MODE, 1);
+			ec_write_byte(CTRL_7_ADDR, status);
 		}
 	}
 	
 	return count;
+}
+
+static ssize_t custom_mode_show(struct device *dev,
+							   struct device_attribute *attr, char *buf)
+{
+	int status = ec_read_byte(CTRL_7_ADDR);
+
+	if (status < 0)
+		return status;
+
+	return sprintf(buf, "%d\n", !!(status & CTRL_7_CUSTOM_MODE));
 }
 
 /* ========================================================================== */
@@ -434,6 +445,7 @@ static DEVICE_ATTR_RW(silent_mode);
 static DEVICE_ATTR_RW(turbo_mode);
 static DEVICE_ATTR_RW(performance_mode);
 static DEVICE_ATTR_RW(custom_tdp);
+static DEVICE_ATTR_RO(custom_mode);
 
 static struct attribute *qc71_laptop_attrs[] = {
 	&dev_attr_fn_lock.attr,
@@ -446,6 +458,7 @@ static struct attribute *qc71_laptop_attrs[] = {
 	&dev_attr_turbo_mode.attr,
 	&dev_attr_performance_mode.attr,
 	&dev_attr_custom_tdp.attr,
+	&dev_attr_custom_mode.attr,
 	NULL
 };
 
@@ -471,7 +484,9 @@ static umode_t qc71_laptop_attr_is_visible(struct kobject *kobj, struct attribut
 		ok = qc71_features.turbo_mode || qc71_features.silent_mode;
 	else if (attr == &dev_attr_custom_tdp.attr)
 		ok = qc71_features.turbo_mode || qc71_features.silent_mode;
-	
+	else if (attr == &dev_attr_custom_mode.attr)
+		ok = qc71_features.turbo_mode || qc71_features.silent_mode;
+
 	return ok ? attr->mode : 0;
 }
 
