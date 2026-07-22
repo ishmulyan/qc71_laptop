@@ -22,9 +22,10 @@ struct oem_string_walker_data {
 
 static int __init slimbook_dmi_cb(const struct dmi_system_id *id)
 {
-	qc71_features.fn_lock      = true;
-	qc71_features.silent_mode  = true;
-	qc71_features.turbo_mode   = true;
+	qc71_features.fn_lock           = true;
+	qc71_features.silent_mode       = true;
+	qc71_features.turbo_mode        = true;
+	qc71_features.batt_charge_limit = true;
 
 	return 1;
 }
