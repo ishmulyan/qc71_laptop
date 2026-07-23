@@ -4,6 +4,7 @@
 #include <linux/ctype.h>
 #include <linux/dmi.h>
 #include <linux/init.h>
+#include <linux/moduleparam.h>
 #include <linux/mod_devicetable.h>
 #include <linux/slab.h>
 #include <linux/string.h>
@@ -18,6 +19,10 @@ struct oem_string_walker_data {
 	int index;
 };
 
+static bool show_charge_limit;
+module_param(show_charge_limit, bool, 0444);
+MODULE_PARM_DESC(show_charge_limit, "expose battery charge limit (default=false)");
+
 /* ========================================================================== */
 
 static int __init slimbook_dmi_cb(const struct dmi_system_id *id)
@@ -25,7 +30,7 @@ static int __init slimbook_dmi_cb(const struct dmi_system_id *id)
 	qc71_features.fn_lock           = true;
 	qc71_features.silent_mode       = true;
 	qc71_features.turbo_mode        = true;
-	qc71_features.batt_charge_limit = true;
+	qc71_features.batt_charge_limit = show_charge_limit;
 
 	return 1;
 }
